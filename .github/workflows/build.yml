@@ -23,10 +23,17 @@ jobs:
           curl -L https://github.com/mpv-android/mpv-android/releases/latest/download/mpv-android-libs.tar.gz -o libs.tar.gz || true
           ls
 
-      - name: Build with Gradle
+     - name: Build with Gradle
         run: |
-          chmod +x gradlew
+          chmod +x mpv-android-2025-12-27/gradlew
+          cd mpv-android-2025-12-27
           ./gradlew assembleDefaultDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: mpv-android-debug
+          path: mpv-android-2025-12-27/app/build/outputs/apk/default/debug/*.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
