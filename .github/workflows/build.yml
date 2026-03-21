@@ -46,11 +46,16 @@ jobs:
           CACHE_MODE: "folder"
           CACHE_FOLDER: "${{ github.workspace }}/mpv-android-2025-12-27/gh-cache"
 
-      - name: Build APK
+      - name: Build native libs
         run: bash buildscripts/include/ci.sh build
 
+      - name: Build APK with Gradle
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDefaultDebug
+
       - name: Find APK
-        run: find . -name "*.apk"
+        run: find . -name "*.apk" -type f
 
       - uses: actions/upload-artifact@v4
         with:
