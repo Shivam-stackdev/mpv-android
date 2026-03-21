@@ -1,42 +1,36 @@
-name: Build MPV Android
+name: Build APK
 
 on:
   push:
-    branches: [ master, main ]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
           distribution: 'temurin'
+          java-version: '17'
 
-      - name: Download prebuilt mpv libs
-        run: |
-          cd mpv-android-2025-12-27/app/src/main
-          rm -f jniLibs
-          mkdir -p jniLibs/arm64-v8a
-          # Download .so files directly from release assets
-          BASE="https://github.com/mpv-android/mpv-android/releases/download/2025-12-27-release"
-          FILES="libmpv.so libplayer-lib.so"
-          for f in $FILES; do
-            curl -L "$BASE/$f" -o "jniLibs/arm64-v8a/$f" || true
-          done
-          ls -la jniLibs/arm64-v8a/
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
-      - name: Build with Gradle
-        run: |
-          chmod +x gradlew
-          ./gradlew assembleDefaultDebug
+      - name: Grant permission
+        run: chmod +x ./gradlew
+
+      - name: Build APK
+        run: ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: mpv-android-debug
-          path: app/build/outputs/apk/default/debug/*.apk
+          name: app-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
