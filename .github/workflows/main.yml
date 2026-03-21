@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:   # 👈 job ka naam (important)
+  build:
     runs-on: ubuntu-latest
 
     defaults:
@@ -33,27 +33,23 @@ jobs:
         run: yes | sdkmanager --licenses
 
       - name: Fix JNI libs (mpv)
-  run: |
-    cd app/src/main
+        run: |
+          cd app/src/main
 
-    rm -rf jniLibs
-    mkdir -p jniLibs/arm64-v8a
+          rm -rf jniLibs
+          mkdir -p jniLibs/arm64-v8a
 
-    # Get latest APK URL dynamically
-    APK_URL=$(curl -s https://api.github.com/repos/mpv-android/mpv-android/releases/latest \
-      | grep browser_download_url \
-      | grep arm64-v8a.apk \
-      | cut -d '"' -f 4)
+          APK_URL=$(curl -s https://api.github.com/repos/mpv-android/mpv-android/releases/latest | grep browser_download_url | grep arm64-v8a.apk | cut -d '"' -f 4)
 
-    echo "Downloading from: $APK_URL"
+          echo "Downloading from: $APK_URL"
 
-    wget "$APK_URL" -O mpv.apk
+          wget "$APK_URL" -O mpv.apk
 
-    unzip mpv.apk "lib/arm64-v8a/*.so" -d extracted
+          unzip mpv.apk "lib/arm64-v8a/*.so" -d extracted
 
-    cp extracted/lib/arm64-v8a/*.so jniLibs/arm64-v8a/
+          cp extracted/lib/arm64-v8a/*.so jniLibs/arm64-v8a/
 
-    ls -la jniLibs/arm64-v8a/
+          ls -la jniLibs/arm64-v8a/
 
       - name: Give permission
         run: chmod +x gradlew
