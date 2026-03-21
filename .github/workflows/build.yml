@@ -1,10 +1,9 @@
-name: Build APK
+
+name: build
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+  pull_request:
 
 jobs:
   build:
@@ -22,34 +21,43 @@ jobs:
           java-version: '17'
           distribution: temurin
 
-      - name: Export env vars
-        run: buildscripts/include/ci.sh export >> $GITHUB_ENV
+      # 🔧 Fix permission (important)
+      - name: Give execute permission
+        run: chmod +x buildscripts/include/ci.sh
 
+      # 🌱 Export env
+      - name: Export env vars
+        run: bash buildscripts/include/ci.sh export >> $GITHUB_ENV
+
+      # ⚡ Cache
       - uses: actions/cache@v4
         with:
           path: gh-cache/
           key: "${{ env.CACHE_IDENTIFIER }}"
           enableCrossOsArchive: true
 
+      # 📦 Install dependencies
       - name: Install deps
         run: |
           sudo apt-get update
           sudo apt-get install -y autoconf pkgconf libtool ninja-build python3-pip gperf
           pip3 install meson
 
+      # ⬇️ Download deps
       - name: Download deps
         run: |
           mkdir -p "$CACHE_FOLDER"
-          buildscripts/include/ci.sh install
+          bash buildscripts/include/ci.sh install
         env:
           CACHE_MODE: "folder"
           CACHE_FOLDER: "${{ github.workspace }}/gh-cache"
 
+      # 🏗️ Build APK
       - name: Build APK
-        run: buildscripts/include/ci.sh build
+        run: bash buildscripts/include/ci.sh build
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      # 📤 Upload APK
+      - uses: actions/upload-artifact@v4
         with:
-          name: mpv-apk
+          name: mpv-android
           path: app/build/outputs/apk/**/**/*.apk
