@@ -1,4 +1,3 @@
-
 name: build
 
 on:
@@ -21,11 +20,11 @@ jobs:
           java-version: '17'
           distribution: temurin
 
-      # 🔧 Fix permission (important)
-      - name: Give execute permission
-        run: chmod +x buildscripts/include/ci.sh
+      # 🔧 Fix ALL permissions
+      - name: Fix permissions (all scripts)
+        run: chmod -R +x buildscripts
 
-      # 🌱 Export env
+      # 🌱 Export env vars
       - name: Export env vars
         run: bash buildscripts/include/ci.sh export >> $GITHUB_ENV
 
