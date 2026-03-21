@@ -17,11 +17,18 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Download prebuilt libraries
+      - name: Download prebuilt mpv libs
         run: |
-          mkdir -p app/src/main/jniLibs
-          curl -L https://github.com/mpv-android/mpv-android/releases/latest/download/mpv-android-libs.tar.gz -o libs.tar.gz || true
-          ls
+          cd mpv-android-2025-12-27/app/src/main
+          rm -f jniLibs
+          mkdir -p jniLibs/arm64-v8a
+          # Download .so files directly from release assets
+          BASE="https://github.com/mpv-android/mpv-android/releases/download/2025-12-27-release"
+          FILES="libmpv.so libplayer-lib.so"
+          for f in $FILES; do
+            curl -L "$BASE/$f" -o "jniLibs/arm64-v8a/$f" || true
+          done
+          ls -la jniLibs/arm64-v8a/
 
       - name: Build with Gradle
         run: |
