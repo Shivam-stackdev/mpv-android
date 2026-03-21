@@ -1,11 +1,11 @@
 name: build
 
 on:
-  push:
-  pull_request:
+  - push
+  - pull_request
 
 jobs:
-  build:
+  linux:
     runs-on: ubuntu-22.04
 
     defaults:
@@ -13,18 +13,20 @@ jobs:
         working-directory: mpv-android-2025-12-27
 
     steps:
+      # 📥 Checkout
       - uses: actions/checkout@v4
 
+      # ☕ Java
       - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: temurin
 
-      # 🔧 Fix ALL permissions
+      # 🔧 Fix permissions (VERY IMPORTANT)
       - name: Fix permissions (all scripts)
         run: chmod -R +x buildscripts
 
-      # 🌱 Export env vars
+      # 🌱 Export env
       - name: Export env vars
         run: bash buildscripts/include/ci.sh export >> $GITHUB_ENV
 
@@ -35,7 +37,7 @@ jobs:
           key: "${{ env.CACHE_IDENTIFIER }}"
           enableCrossOsArchive: true
 
-      # 📦 Install dependencies
+      # 📦 Install deps
       - name: Install deps
         run: |
           sudo apt-get update
@@ -49,14 +51,18 @@ jobs:
           bash buildscripts/include/ci.sh install
         env:
           CACHE_MODE: "folder"
-          CACHE_FOLDER: "${{ github.workspace }}/gh-cache"
+          CACHE_FOLDER: "${{ github.workspace }}/mpv-android-2025-12-27/gh-cache"
 
-      # 🏗️ Build APK
+      # 🏗 Build APK
       - name: Build APK
         run: bash buildscripts/include/ci.sh build
+
+      # 🔍 Debug (see where APK is)
+      - name: Show APK files
+        run: find . -name "*.apk"
 
       # 📤 Upload APK
       - uses: actions/upload-artifact@v4
         with:
           name: mpv-android
-          path: app/build/outputs/apk/**/**/*.apk
+          path: "**/*.apk"
