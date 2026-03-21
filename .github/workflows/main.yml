@@ -1,14 +1,12 @@
-name: gradle-build
+name: build
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
+  - push
+  - pull_request
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  linux:
+    runs-on: ubuntu-22.04
 
     defaults:
       run:
@@ -22,20 +20,44 @@ jobs:
           java-version: '17'
           distribution: temurin
 
-      # 🔧 Permission
-      - name: Give permission
-        run: chmod +x gradlew
+      - name: Fix permissions
+        run: chmod -R +x buildscripts
 
-      # 🏗 Direct build (no scripts)
-      - name: Build APK (gradle only)
-        run: ./gradlew assembleDebug --stacktrace
+      - name: Export env vars
+        run: bash buildscripts/include/ci.sh export >> $GITHUB_ENV
 
-      # 🔍 Find APK
+      - uses: actions/cache@v4
+        with:
+          path: gh-cache/
+          key: "${{ env.CACHE_IDENTIFIER }}"
+          enableCrossOsArchive: true
+
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y autoconf pkgconf libtool ninja-build python3-pip gperf
+          pip3 install meson
+
+      - name: Download deps
+        run: |
+          mkdir -p "$CACHE_FOLDER"
+          bash buildscripts/include/ci.sh install
+        env:
+          CACHE_MODE: "folder"
+          CACHE_FOLDER: "${{ github.workspace }}/mpv-android-2025-12-27/gh-cache"
+
+      - name: Build native libs
+        run: bash buildscripts/include/ci.sh build
+
+      - name: Build APK with Gradle
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDefaultDebug
+
       - name: Find APK
-        run: find . -name "*.apk"
+        run: find . -name "*.apk" -type f
 
-      # 📦 Upload
       - uses: actions/upload-artifact@v4
         with:
-          name: gradle-apk
+          name: mpv-android
           path: "**/*.apk"
