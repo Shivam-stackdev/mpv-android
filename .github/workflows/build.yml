@@ -8,7 +8,11 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
+
+    defaults:
+      run:
+        working-directory: mpv-android-2025-12-27
 
     steps:
       - uses: actions/checkout@v4
