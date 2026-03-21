@@ -32,33 +32,26 @@ jobs:
       - name: Accept licenses
         run: yes | sdkmanager --licenses
 
-      - name: Fix JNI libs (mpv)
-  run: |
-    cd app/src/main
+      - name: Download mpv libs
+        run: |
+          rm -rf jniLibs
+          mkdir -p jniLibs/arm64-v8a
+          APK_URL=$(curl -s https://api.github.com/repos/mpv-and... \
+            | grep browser_download_url \
+            | grep '\.apk' \
+            | head -n 1 \
+            | cut -d '"' -f 4)
 
-    rm -rf jniLibs
-    mkdir -p jniLibs/arm64-v8a
+          echo "Downloading from: $APK_URL"
 
-    APK_URL=$(curl -s https://api.github.com/repos/mpv-android/mpv-android/releases/latest \
-      | grep browser_download_url \
-      | grep '\.apk' \
-      | head -n 1 \
-      | cut -d '"' -f 4)
+          if [ -z "$APK_URL" ]; then
+            echo "❌ APK URL not found"
+            exit 1
+          fi
 
-    echo "Downloading from: $APK_URL"
-
-    if [ -z "$APK_URL" ]; then
-      echo "❌ APK URL not found"
-      exit 1
-    fi
-
-    wget "$APK_URL" -O mpv.apk
-
-    unzip mpv.apk "lib/arm64-v8a/*.so" -d extracted
-
-    cp extracted/lib/arm64-v8a/*.so jniLibs/arm64-v8a/
-
-    ls -la jniLibs/arm64-v8a/
+          wget "$APK_URL" -O mpv.apk
+          unzip mpv.apk "lib/arm64-v8a/*.so" -d extracted
+          cp extracted/lib/arm64-v8a/*.so jniLibs/arm64-v8a/
       - name: Give permission
         run: chmod +x gradlew
 
