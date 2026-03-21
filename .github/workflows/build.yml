@@ -13,38 +13,31 @@ jobs:
         working-directory: mpv-android-2025-12-27
 
     steps:
-      # 📥 Checkout
       - uses: actions/checkout@v4
 
-      # ☕ Java
       - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: temurin
 
-      # 🔧 Fix permissions (VERY IMPORTANT)
-      - name: Fix permissions (all scripts)
+      - name: Fix permissions
         run: chmod -R +x buildscripts
 
-      # 🌱 Export env
       - name: Export env vars
         run: bash buildscripts/include/ci.sh export >> $GITHUB_ENV
 
-      # ⚡ Cache
       - uses: actions/cache@v4
         with:
           path: gh-cache/
           key: "${{ env.CACHE_IDENTIFIER }}"
           enableCrossOsArchive: true
 
-      # 📦 Install deps
       - name: Install deps
         run: |
           sudo apt-get update
           sudo apt-get install -y autoconf pkgconf libtool ninja-build python3-pip gperf
           pip3 install meson
 
-      # ⬇️ Download deps
       - name: Download deps
         run: |
           mkdir -p "$CACHE_FOLDER"
@@ -53,15 +46,15 @@ jobs:
           CACHE_MODE: "folder"
           CACHE_FOLDER: "${{ github.workspace }}/mpv-android-2025-12-27/gh-cache"
 
-      # 🏗 Build APK
       - name: Build APK
         run: bash buildscripts/include/ci.sh build
 
-      # 🔍 Debug (see where APK is)
-      - name: Show APK files
+      - name: Force Gradle APK build
+        run: ./gradlew assembleDebug
+
+      - name: Find APK
         run: find . -name "*.apk"
 
-      # 📤 Upload APK
       - uses: actions/upload-artifact@v4
         with:
           name: mpv-android
