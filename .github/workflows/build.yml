@@ -49,9 +49,6 @@ jobs:
       - name: Build APK
         run: bash buildscripts/include/ci.sh build
 
-      - name: Force Gradle APK build
-        run: ./gradlew assembleDebug
-
       - name: Find APK
         run: find . -name "*.apk"
 
