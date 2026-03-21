@@ -1,0 +1,41 @@
+name: gradle-build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: mpv-android-2025-12-27
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: temurin
+
+      # 🔧 Permission
+      - name: Give permission
+        run: chmod +x gradlew
+
+      # 🏗 Direct build (no scripts)
+      - name: Build APK (gradle only)
+        run: ./gradlew assembleDebug --stacktrace
+
+      # 🔍 Find APK
+      - name: Find APK
+        run: find . -name "*.apk"
+
+      # 📦 Upload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gradle-apk
+          path: "**/*.apk"
