@@ -32,21 +32,28 @@ jobs:
       - name: Accept licenses
         run: yes | sdkmanager --licenses
 
-      # ✅ FIX JNI STEP (correct place)
       - name: Fix JNI libs (mpv)
-        run: |
-          cd app/src/main
+  run: |
+    cd app/src/main
 
-          rm -rf jniLibs
-          mkdir -p jniLibs/arm64-v8a
+    rm -rf jniLibs
+    mkdir -p jniLibs/arm64-v8a
 
-          wget https://github.com/mpv-android/mpv-android/releases/latest/download/mpv-android-arm64-v8a.apk -O mpv.apk
+    # Get latest APK URL dynamically
+    APK_URL=$(curl -s https://api.github.com/repos/mpv-android/mpv-android/releases/latest \
+      | grep browser_download_url \
+      | grep arm64-v8a.apk \
+      | cut -d '"' -f 4)
 
-          unzip mpv.apk "lib/arm64-v8a/*.so" -d extracted
+    echo "Downloading from: $APK_URL"
 
-          cp extracted/lib/arm64-v8a/*.so jniLibs/arm64-v8a/
+    wget "$APK_URL" -O mpv.apk
 
-          ls -la jniLibs/arm64-v8a/
+    unzip mpv.apk "lib/arm64-v8a/*.so" -d extracted
+
+    cp extracted/lib/arm64-v8a/*.so jniLibs/arm64-v8a/
+
+    ls -la jniLibs/arm64-v8a/
 
       - name: Give permission
         run: chmod +x gradlew
