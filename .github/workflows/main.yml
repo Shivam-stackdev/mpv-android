@@ -1,41 +1,59 @@
-name: Build mpv-android-mod
-on: [push, pull_request, workflow_dispatch]
+name: build
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  linux:
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: mpv-android-2025-12-27
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          submodules: recursive
+          submodules: recursive # Required for mpv
 
-      - name: set up JDK 17
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
           java-version: '17'
-          distribution: 'temurin'
-          cache: 'gradle'
+          distribution: temurin
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Fix permissions
+        run: chmod -R +x buildscripts
 
-      - name: Install NDK
-        run: sdkmanager "ndk;25.2.9519653"
+      - name: Export env vars
+        run: bash buildscripts/include/ci.sh export >> $GITHUB_ENV
 
-      - name: Grant Execute Permission
-        # We point to the folder shown in your screenshot
-        run: chmod +x mpv-android/gradlew
+      - name: Install system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y autoconf pkgconf libtool ninja-build python3-pip gperf
+          pip3 install meson
 
-      - name: Build with Gradle
-        # 'working-directory' tells GitHub to run the command INSIDE that folder
-        working-directory: ./mpv-android
-        run: ./gradlew assembleDebug --no-daemon
+      - name: Download build deps
+        run: bash buildscripts/include/ci.sh install
+        env:
+          CACHE_MODE: "folder"
+          CACHE_FOLDER: "${{ github.workspace }}/mpv-android-2025-12-27/gh-cache"
+
+      - name: Build APK
+        run: bash buildscripts/include/ci.sh build
+
+      - name: Verify APK Location
+        # This will print the exact location of the APK in your logs
+        run: find . -name "*.apk"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: mpv-mod-apk
-          # This search pattern will find the APK inside the subfolders
-          path: "**/build/outputs/apk/debug/*.apk"
+          name: mpv-build-result
+          # This tells GitHub to grab any APK it finds inside your folder
+          path: mpv-android-2025-12-27/**/*.apk
+          if-no-files-found: error
           
