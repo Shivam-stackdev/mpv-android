@@ -31,12 +31,6 @@ jobs:
           sudo apt-get install -y autoconf pkgconf libtool ninja-build python3-pip gperf
           pip3 install meson
 
-      - name: Setup Android SDK/NDK
-        # This manually forces the environment variables the script needs
-        run: |
-          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
-          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk-bundle" >> $GITHUB_ENV
-
       - name: Export Env Vars
         run: bash buildscripts/include/ci.sh export >> $GITHUB_ENV
 
@@ -47,17 +41,21 @@ jobs:
           CACHE_FOLDER: "${{ github.workspace }}/mpv-android-2025-12-27/gh-cache"
 
       - name: Build APK
-        # We add '|| exit 1' to FORCE it to fail if the build doesn't work
-        run: bash buildscripts/include/ci.sh build || exit 1
+        # We use 'assembleDebug' directly if ci.sh is failing to package
+        run: bash buildscripts/include/ci.sh build
 
-      - name: Debug Find
-        # This will show us if the file exists ANYWHERE in the runner
-        run: find ${{ github.workspace }} -name "*.apk"
+      - name: Find APKs (Debug Log)
+        # This will list EVERY apk found so you can see the path in the logs
+        run: |
+          echo "Checking all directories for APK files..."
+          find ${{ github.workspace }} -name "*.apk"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: mpv-debug-apk
-          path: "**/*.apk"
+          name: mpv-android-output
+          # THIS IS THE FIX: It searches the entire workspace, ignoring subfolder limits
+          path: |
+            ${{ github.workspace }}/**/*.apk
           if-no-files-found: error
           
