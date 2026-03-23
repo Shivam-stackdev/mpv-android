@@ -30,6 +30,9 @@ jobs:
           sed -i 's|gradle-.*-bin.zip|gradle-8.13-bin.zip|g' gradle/wrapper/gradle-wrapper.properties
           cat gradle/wrapper/gradle-wrapper.properties
 
+      - name: Show AGP version
+        run: grep -r "com.android.tools.build" build.gradle || grep -r "com.android.tools.build" buildscripts/ || true
+
       - name: Export env vars
         run: buildscripts/include/ci.sh export >> $GITHUB_ENV
 
@@ -55,6 +58,9 @@ jobs:
 
       - name: Build
         run: buildscripts/include/ci.sh build
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.warning.mode=all"
+          EXTRA_GRADLE_ARGS: "--stacktrace --warning-mode all --scan"
 
       - name: Verify APK
         run: find . -name "*.apk"
