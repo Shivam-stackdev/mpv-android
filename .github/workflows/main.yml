@@ -29,6 +29,11 @@ jobs:
           chmod -R +x buildscripts
           chmod +x gradlew
 
+      - name: Pin Gradle version
+        run: |
+          sed -i 's|gradle-.*-bin.zip|gradle-8.13-bin.zip|g' gradle/wrapper/gradle-wrapper.properties
+          cat gradle/wrapper/gradle-wrapper.properties
+
       - name: Export env vars
         run: bash buildscripts/include/ci.sh export >> $GITHUB_ENV
 
@@ -53,9 +58,7 @@ jobs:
           CACHE_FOLDER: "${{ github.workspace }}/mpv-android-2025-12-27/gh-cache"
 
       - name: Build APK
-        run: |
-          sed -i 's|gradle-.*-bin.zip|gradle-8.7-bin.zip|' gradle/wrapper/gradle-wrapper.properties
-          bash buildscripts/include/ci.sh build
+        run: bash buildscripts/include/ci.sh build
 
       - name: Verify APK Location
         run: find . -name "*.apk"
