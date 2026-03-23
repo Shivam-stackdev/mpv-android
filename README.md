@@ -1,47 +1,39 @@
-# mpv-android (Modified)
+# mpv for Android
 
-A modified version of [mpv-android](https://github.com/mpv-android/mpv-android) 
-with VLC-style video library features added.
+[![Build Status](https://github.com/mpv-android/mpv-android/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/mpv-android/mpv-android/actions/workflows/build.yml)
 
-## Original Project Credit
+mpv-android is a video player for Android based on [libmpv](https://github.com/mpv-player/mpv).
 
-This project is based on **mpv-android** by the mpv-android contributors.  
-Original repo: https://github.com/mpv-android/mpv-android  
-License: MIT
+## Features
 
-## Changes Made (by Shivam-stackdev)
+* Hardware and software video decoding
+* Gesture-based seeking, volume/brightness control and more
+* libass support for styled subtitles
+* Secondary (or dual) subtitle support
+* High-quality rendering with advanced settings (scalers, debanding, interpolation, ...)
+* Play network streams with the "Open URL" function
+* Background playback, Picture-in-Picture, keyboard input supported
 
-### 🎬 All Videos Screen
-- VLC-style home screen showing all videos from device storage
-- Grid layout with video thumbnails and names
-- Video duration badge on each thumbnail
-- Red progress bar showing watched position
+### Library?
 
-### ⏱️ Video Resume / Time Preservation
-- Automatically saves playback position when you exit
-- Resumes from last position when you reopen a video
-- Clears saved position when video is watched till end
+mpv-android is **not** a library/module (AAR) you can import into your app.
 
-### 🔍 Video Options (3-dot menu per video)
-- Play
-- Delete (with confirmation)
-- Share
-- Info (duration, size, last position, path)
+If you'd like to use libmpv in your app you can use our code as inspiration.
+The important parts are [`MPVLib`](app/src/main/java/is/xyz/mpv/MPVLib.kt), [`BaseMPVView`](app/src/main/java/is/xyz/mpv/BaseMPVView.kt) and the [native code](app/src/main/jni/).
+Native code is built by [these scripts](buildscripts/).
 
-### 👆 Double Tap Seek (default)
-- Double tap left side → seek back 10 seconds
-- Double tap right side → seek forward 10 seconds
-- Works out of the box without changing any settings
+## Downloads
 
-### 📱 Permissions Added
-- READ_MEDIA_VIDEO (Android 13+)
-- READ_MEDIA_IMAGES (Android 13+)
-- READ_EXTERNAL_STORAGE (Android 12 and below)
+You can download mpv-android from the [Releases section](https://github.com/mpv-android/mpv-android/releases) or
 
-## Building
+[<img src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png" alt="Get it on Google Play" height="80">](https://play.google.com/store/apps/details?id=is.xyz.mpv)
 
-See `.github/workflows/build.yml` for automated build via GitHub Actions.
+[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/packages/is.xyz.mpv)
 
-## License
+**Note**: Android TV is supported, but only available on F-Droid or by installing the APK manually.
 
-Same as original — MIT License
+## Building from source
+
+Take a look at the [README](buildscripts/README.md) inside the `buildscripts` directory.
+
+Some other documentation can be found at this [link](http://mpv-android.github.io/mpv-android/).
