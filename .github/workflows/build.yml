@@ -1,36 +1,63 @@
 name: build
 
 on:
-  - push
-  - pull_request
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
   linux:
-    runs-on: ubuntu-22.04
-
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: mpv-android-2025-12-27
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-      - uses: actions/setup-java@v4
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: temurin
 
-      - name: Fix permissions
-        run: chmod -R +x buildscripts
+      - name: Install Dependencies
+        run: |
+          chmod -R +x buildscripts
+          sudo apt-get update
+          sudo apt-get install -y autoconf pkgconf libtool ninja-build python3-pip gperf
+          pip3 install meson
 
-      - name: Export env vars
+      - name: Setup Android SDK/NDK
+        # This manually forces the environment variables the script needs
+        run: |
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk-bundle" >> $GITHUB_ENV
+
+      - name: Export Env Vars
         run: bash buildscripts/include/ci.sh export >> $GITHUB_ENV
 
-      - uses: actions/cache@v4
-        with:
-          path: gh-cache/
-          key: "${{ env.CACHE_IDENTIFIER }}"
-          enableCrossOsArchive: true
+      - name: Download Deps
+        run: bash buildscripts/include/ci.sh install
+        env:
+          CACHE_MODE: "folder"
+          CACHE_FOLDER: "${{ github.workspace }}/mpv-android-2025-12-27/gh-cache"
 
-      - name: Install deps
-        run: |
+      - name: Build APK
+        # We add '|| exit 1' to FORCE it to fail if the build doesn't work
+        run: bash buildscripts/include/ci.sh build || exit 1
+
+      - name: Debug Find
+        # This will show us if the file exists ANYWHERE in the runner
+        run: find ${{ github.workspace }} -name "*.apk"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: mpv-debug-apk
+          path: "**/*.apk"
+          if-no-files-found: error
+          
