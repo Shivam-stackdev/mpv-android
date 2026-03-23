@@ -2,60 +2,59 @@ name: build
 
 on:
   push:
-    branches: [ main, master ]
-  workflow_dispatch:
+  pull_request:
 
 jobs:
   linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+
     defaults:
       run:
         working-directory: mpv-android-2025-12-27
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
+      - uses: actions/checkout@v6
 
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: temurin
 
-      - name: Install Dependencies
+      # 🔐 Permission fix
+      - name: Fix permissions
+        run: chmod -R +x buildscripts
+
+      - name: Export env vars
+        run: buildscripts/include/ci.sh export >> $GITHUB_ENV
+
+      - uses: actions/cache@v5
+        with:
+          path: gh-cache/
+          key: ${{ env.CACHE_IDENTIFIER }}
+
+      - name: Install deps
         run: |
-          chmod -R +x buildscripts
           sudo apt-get update
           sudo apt-get install -y autoconf pkgconf libtool ninja-build python3-pip gperf
           pip3 install meson
 
-      - name: Export Env Vars
-        run: bash buildscripts/include/ci.sh export >> $GITHUB_ENV
-
-      - name: Download Deps
-        run: bash buildscripts/include/ci.sh install
-        env:
-          CACHE_MODE: "folder"
-          CACHE_FOLDER: "${{ github.workspace }}/mpv-android-2025-12-27/gh-cache"
-
-      - name: Build APK
-        # We use 'assembleDebug' directly if ci.sh is failing to package
-        run: bash buildscripts/include/ci.sh build
-
-      - name: Find APKs (Debug Log)
-        # This will list EVERY apk found so you can see the path in the logs
+      - name: Download deps
         run: |
-          echo "Checking all directories for APK files..."
-          find ${{ github.workspace }} -name "*.apk"
+          mkdir -p "$CACHE_FOLDER"
+          buildscripts/include/ci.sh install
+        env:
+          CACHE_MODE: folder
+          CACHE_FOLDER: ${{ github.workspace }}/gh-cache
+
+      - name: Build
+        run: buildscripts/include/ci.sh build
+
+      # 🧪 Debug (optional but useful)
+      - name: Find APK
+        run: find . -name "*.apk"
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: mpv-android-output
-          # THIS IS THE FIX: It searches the entire workspace, ignoring subfolder limits
-          path: |
-            ${{ github.workspace }}/**/*.apk
-          if-no-files-found: error
-          
+          name: mpv-android
+          path: mpv-android-2025-12-27/app/build/outputs/apk/**/*.apk
