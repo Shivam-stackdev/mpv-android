@@ -23,26 +23,22 @@ android {
         "default" {
             isDefault true
         }
-        api29 {
-            targetSdkVersion 29
-            versionNameSuffix "-oldapi"
-        }
     }
 
     buildFeatures {
         viewBinding = true
         buildConfig = true
     }
-splits {
-    abi {
-        enable true
-        reset()
-        include "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
-        universalApk true
+
+    splits {
+        abi {
+            enable true
+            reset()
+            include "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+            universalApk true
+        }
     }
-}
-    
-    // https://youtrack.jetbrains.com/issue/KT-55947
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
@@ -52,13 +48,10 @@ splits {
     }
 }
 
-// Map versionCode so each ABI gets a different one
-// e.g. x86 with version 21 gets a versionCode of 3021
 import com.android.build.VariantOutput
 android.applicationVariants.all { variant ->
     variant.outputs.each { output ->
         def base = project.ext.abiCodes.get(output.getFilter(VariantOutput.ABI))
-        // universal APK just gets a constant added to it
         if (base != null)
             output.versionCodeOverride = base * 1000 + variant.versionCode
         else
