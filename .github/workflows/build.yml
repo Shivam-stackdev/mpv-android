@@ -2,59 +2,59 @@ name: build
 
 on:
   push:
-  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
   linux:
-    runs-on: ubuntu-24.04
-
+    runs-on: ubuntu-22.04
     defaults:
       run:
         working-directory: mpv-android-2025-12-27
 
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout Code
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive # Required for mpv
 
-      - uses: actions/setup-java@v5
+      - name: Set up Java
+        uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: temurin
 
-      # 🔐 Permission fix
       - name: Fix permissions
         run: chmod -R +x buildscripts
 
       - name: Export env vars
-        run: buildscripts/include/ci.sh export >> $GITHUB_ENV
+        run: bash buildscripts/include/ci.sh export >> $GITHUB_ENV
 
-      - uses: actions/cache@v5
-        with:
-          path: gh-cache/
-          key: ${{ env.CACHE_IDENTIFIER }}
-
-      - name: Install deps
+      - name: Install system deps
         run: |
           sudo apt-get update
           sudo apt-get install -y autoconf pkgconf libtool ninja-build python3-pip gperf
           pip3 install meson
 
-      - name: Download deps
-        run: |
-          mkdir -p "$CACHE_FOLDER"
-          buildscripts/include/ci.sh install
+      - name: Download build deps
+        run: bash buildscripts/include/ci.sh install
         env:
-          CACHE_MODE: folder
-          CACHE_FOLDER: ${{ github.workspace }}/gh-cache
+          CACHE_MODE: "folder"
+          CACHE_FOLDER: "${{ github.workspace }}/mpv-android-2025-12-27/gh-cache"
 
-      - name: Build
-        run: buildscripts/include/ci.sh build
+      - name: Build APK
+        run: bash buildscripts/include/ci.sh build
 
-      # 🧪 Debug (optional but useful)
-      - name: Find APK
+      - name: Verify APK Location
+        # This will print the exact location of the APK in your logs
         run: find . -name "*.apk"
 
       - name: Upload APK
         uses: actions/upload-artifact@v7
         with:
-          name: mpv-android
-          path: mpv-android-2025-12-27/app/build/outputs/apk/**/*.apk
+          name: mpv-build-result
+          # This tells GitHub to grab any APK it finds inside your folder
+          path: mpv-android-2025-12-27/**/*.apk
+          if-no-files-found: error
+
+          
