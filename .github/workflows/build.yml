@@ -59,5 +59,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: mpv-android
-          path: app/build/outputs/apk/default/debug/app-default-armeabi-v7a-debug.apk
+          path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
