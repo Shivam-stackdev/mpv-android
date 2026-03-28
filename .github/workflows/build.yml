@@ -31,12 +31,13 @@ jobs:
       - name: Install deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y autoconf pkgconf libtool ninja-build python3-pip gperf nasm yasm
+          sudo apt-get install -y autoconf pkgconf libtool ninja-build python3-pip gperf
           pip3 install meson
 
-      - name: Download deps
+      - name: Download and install deps
         run: |
           mkdir -p "$CACHE_FOLDER"
+          bash buildscripts/include/ci.sh download
           bash buildscripts/include/ci.sh install
         env:
           CACHE_MODE: "folder"
@@ -57,8 +58,8 @@ jobs:
       - name: Build APK
         run: |
           chmod +x gradlew
-          ./gradlew tasks --all | grep -i "assemble" || true
-          ./gradlew assembleDebug || ./gradlew assemble
+          ./gradlew assembleDebug
+
       - name: Find APK
         run: find . -name "*.apk" -type f
 
