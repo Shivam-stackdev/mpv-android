@@ -37,8 +37,9 @@ jobs:
       - name: Download and install deps
         run: |
           mkdir -p "$CACHE_FOLDER"
-          bash buildscripts/include/ci.sh download
-          bash buildscripts/include/ci.sh install
+          cd buildscripts
+          bash download.sh
+          bash include/ci.sh install
         env:
           CACHE_MODE: "folder"
           CACHE_FOLDER: "${{ github.workspace }}/gh-cache"
