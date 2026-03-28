@@ -57,8 +57,8 @@ jobs:
       - name: Build APK
         run: |
           chmod +x gradlew
-          ./gradlew assembleDefaultDebug
-
+          ./gradlew tasks --all | grep -i "assemble" || true
+          ./gradlew assembleDebug || ./gradlew assemble
       - name: Find APK
         run: find . -name "*.apk" -type f
 
