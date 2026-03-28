@@ -8,10 +8,6 @@ jobs:
   linux:
     runs-on: ubuntu-22.04
 
-    defaults:
-      run:
-        working-directory: mpv-android-2025-12-27
-
     steps:
       - uses: actions/checkout@v4
 
@@ -44,24 +40,21 @@ jobs:
           bash buildscripts/include/ci.sh install
         env:
           CACHE_MODE: "folder"
-          CACHE_FOLDER: "${{ github.workspace }}/mpv-android-2025-12-27/gh-cache"
+          CACHE_FOLDER: "${{ github.workspace }}/gh-cache"
 
       - name: Build native libs
         run: |
           bash buildscripts/include/ci.sh build
-          echo "=== Checking built libs ==="
-          find . -name "libmpv.so" -o -name "*.so" | head -20
+          find . -name "*.so" | head -20
 
-      - name: Fix jniLibs symlink
+      - name: Fix jniLibs
         run: |
           rm -rf app/src/main/jniLibs
           mkdir -p app/src/main/jniLibs/arm64-v8a
-          find . -name "libmpv.so" -exec cp {} app/src/main/jniLibs/arm64-v8a/ \; || true
           find . -name "*.so" -path "*/arm64*" -exec cp {} app/src/main/jniLibs/arm64-v8a/ \; || true
-          echo "=== jniLibs contents ==="
           ls -la app/src/main/jniLibs/arm64-v8a/
 
-      - name: Build APK with Gradle
+      - name: Build APK
         run: |
           chmod +x gradlew
           ./gradlew assembleDefaultDebug
@@ -72,4 +65,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: mpv-android
-          path: "**/*.apk"
+          path: "app/build/outputs/apk/**/*.apk"
