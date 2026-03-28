@@ -143,9 +143,10 @@ class FilePickerActivity : AppCompatActivity(), AbstractFilePickerFragment.OnFil
         return true
     }
 
-    
-
-               val vols = Utils.getStorageVolumes(this)
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.action_external_storage -> {
+                val vols = Utils.getStorageVolumes(this)
 
                 with (AlertDialog.Builder(this)) {
                     setItems(vols.map { it.description }.toTypedArray()) { dialog, item ->
