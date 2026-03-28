@@ -570,8 +570,7 @@ class MPVActivity : AppCompatActivity(), MPVLib.EventObserver, TouchGesturesObse
         }
         MPVLib.command(arrayOf("write-watch-later-config"))
     }
-    
-  }
+
     /**
      * Requests or abandons audio focus and noisy receiver depending on the playback state.
      * @warning Call from event thread, not UI thread
